@@ -23,11 +23,11 @@ public class PlayerExample : NetworkBehaviour
         /* Activate Camera */
         Camera.main.GetComponent<TransformFollower>().Target = this.transform;
         
-        /*
-         Inform other clients about name. The cast is a one-time workaround,
-         because singleton is of type NetworkManager.
-         */
-        CmdSetupPlayer(((GameServer) GameServer.singleton).LocalPlayerInfo.name);
+        // old
+        // CmdSetupPlayer(((GameServer) GameServer.singleton).LocalPlayerInfo.name);
+        
+        // new
+        CmdSetupPlayer(GameServer.Instance.LocalPlayerInfo.name);
     }
 
     /// <summary>

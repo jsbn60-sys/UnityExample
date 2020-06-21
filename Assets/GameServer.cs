@@ -20,14 +20,25 @@ public class GameServer : NetworkManager
     /// the player that started the game.
     /// NOTE: This is not important for development.
     /// </summary>
-    private const string FILE_NAME = "MyFile.txt";
+    private const string FILE_NAME = "PlayerInfo.txt";
 
     /// <summary>
     /// Stores the information of the player that started the game.
     /// </summary>
     private PlayerInfo localPlayerInfo;
 
+    /// <summary>
+    /// Defines how long the game server will try to connect the client before quitting the application.
+    /// </summary>
+    [SerializeField] private float disconnectWaitTime;
+
+    /// <summary>
+    /// Stores the time until disconnect.
+    /// </summary>
+    private float disconnectTimer;
+    
     public PlayerInfo LocalPlayerInfo => localPlayerInfo;
+    public static GameServer Instance => (GameServer) singleton;
     
     /// <summary>
     /// Start is called before the first frame update.
@@ -42,7 +53,7 @@ public class GameServer : NetworkManager
 
         LoadPlayerInfoMockup();
 
-        /*LoadPlayerInfo();
+        // LoadPlayerInfo();
 
         if (localPlayerInfo.isHost)
         {
@@ -50,9 +61,29 @@ public class GameServer : NetworkManager
         }
         else
         {
+            disconnectTimer = disconnectWaitTime;
+        }
+        
+    }
+
+    /// <summary>
+    /// Update is called once per frame.
+    /// Checks if the local player is a client and not connected.
+    /// If so the client tries to connect and the disconnect timer is updated.
+    /// </summary>
+    private void Update()
+    {
+        if(!localPlayerInfo.isHost && !NetworkClient.isConnected)
+        {
+            disconnectTimer -= Time.deltaTime;
+
+            if (disconnectTimer <= 0f)
+            {
+                Application.Quit();
+            }
+            
             StartClient();
         }
-        */
     }
 
     /// <summary>
@@ -61,7 +92,7 @@ public class GameServer : NetworkManager
     /// </summary>
     private void LoadPlayerInfo()
     {
-        StreamReader file = new StreamReader(Application.dataPath + @"\..\..\..\" + FILE_NAME);
+        StreamReader file = new StreamReader(Application.dataPath + @"\..\..\..\Framework\" + FILE_NAME);
         localPlayerInfo = (PlayerInfo)JsonUtility.FromJson(file.ReadLine(),typeof(PlayerInfo));
         file.Close();
         File.Delete(FILE_NAME);
