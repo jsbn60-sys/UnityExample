@@ -240,7 +240,8 @@ MonoBehaviour:
   autoCreatePlayer: 1
   playerSpawnMethod: 0
   spawnPrefabs: []
-  isClient: 1
+  gameId: 0
+  disconnectWaitTime: 120
 --- !u!1 &344099245
 GameObject:
   m_ObjectHideFlags: 0
