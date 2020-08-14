@@ -3,6 +3,10 @@
   <component name="ContentModelUserStore">
     <attachedFolders />
     <explicitIncludes>
+      <Path>Library/PackageCache/com.google.external-dependency-manager@1.2.156</Path>
+      <Path>Library/PackageCache/com.google.firebase.app@6.15.2</Path>
+      <Path>Library/PackageCache/com.google.firebase.auth@6.15.2</Path>
+      <Path>Library/PackageCache/com.google.firebase.database@6.15.2</Path>
       <Path>Library/PackageCache/com.unity.collab-proxy@1.2.16</Path>
       <Path>Library/PackageCache/com.unity.ext.nunit@1.0.0</Path>
       <Path>Library/PackageCache/com.unity.ide.rider@1.1.0</Path>

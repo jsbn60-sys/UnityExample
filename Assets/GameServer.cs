@@ -21,7 +21,7 @@ public class GameServer : NetworkManager
     /// the player that started the game.
     /// NOTE: This is not important for development.
     /// </summary>
-    private const string FILE_NAME = "PlayerInfo.txt";
+    private const string FILE_NAME = "Info.txt";
 
     /// <summary>
     /// Defines how long the game server will try to connect the client before quitting the application.
@@ -37,7 +37,7 @@ public class GameServer : NetworkManager
     /// Stores information about the player.
     /// </summary>
     private JSONNode playerInfos;
-    
+
     /// <summary>
     /// Stores information about the game.
     /// </summary>
@@ -47,6 +47,11 @@ public class GameServer : NetworkManager
     /// Stores if the local player is the host.
     /// </summary>
     private bool isHost;
+
+    /// <summary>
+    /// Signals if the game can be quit.
+    /// </summary>
+    private bool readyToQuit;
 
     public JSONNode PlayerInfos => playerInfos;
 
@@ -64,8 +69,10 @@ public class GameServer : NetworkManager
     void Start()
     {
         base.Start();
+
+        readyToQuit = false;
         isHost = false;
-        
+
         //LoadPlayerInfoMockup();     // <- FOR DEVELOPMENT
 
         LoadPlayerInfo();             // <- FOR RELEASE
@@ -87,6 +94,7 @@ public class GameServer : NetworkManager
     /// </summary>
     private void Update()
     {
+        // Try connecting if not host
         if (!isHost && !NetworkClient.isConnected)
         {
             disconnectTimer -= Time.deltaTime;
@@ -98,6 +106,23 @@ public class GameServer : NetworkManager
 
             StartClient();
         }
+
+        // Try quitting
+        if (readyToQuit)
+        {
+            if (isHost)
+            {
+                // Host waits for all players to quit first
+                if (NetworkServer.connections.Count <= 1)
+                {
+                    Application.Quit();
+                }
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
     }
 
     /// <summary>
@@ -107,7 +132,23 @@ public class GameServer : NetworkManager
     private void LoadPlayerInfo()
     {
         // Read file
-        StreamReader file = new StreamReader(Application.dataPath + @"\..\..\..\..\Framework\" + FILE_NAME);
+        string filePath = "";
+        switch (SystemInfo.operatingSystemFamily)
+        {
+            case OperatingSystemFamily.Windows:
+                filePath = Application.dataPath + @"\..\..\..\..\Framework\Windows\" + FILE_NAME;
+                break;
+            case OperatingSystemFamily.Linux:
+                filePath = Application.dataPath + @"\..\..\..\..\Framework\Linux\" + FILE_NAME;
+                break;
+            case OperatingSystemFamily.MacOSX:
+                filePath = Application.dataPath + @"\..\..\..\..\Framework\MACOSX\" + FILE_NAME;
+                break;
+            default:
+                throw new ArgumentException("Illegal OS !");
+        }
+
+        StreamReader file = new StreamReader(filePath);
         JSONNode jsonFile = JSON.Parse(file.ReadLine());
 
         // Load data
@@ -132,5 +173,35 @@ public class GameServer : NetworkManager
         JSONNode tmp = new JSONObject();
         tmp.Add("name", "Mustermann");
         playerInfos.Add(tmp);
+    }
+
+    /// <summary>
+    /// Handles the results of the game and sets the readyToQuit flag.
+    /// Needs the placement of the local player and the name of the winning player
+    /// and writes them into a JSON that is used to give rewards in the framework.
+    /// IMPORTANT: THIS HAS TO BE CALLED AT THE END OF THE GAME!
+    /// </summary>
+    /// <param name="localPlayerWinningPlacement">Placement of the local player</param>
+    /// <param name="nameOfWinner">Name of the winner</param>
+    public void HandleGameResults(int localPlayerWinningPlacement, string nameOfWinner)
+    {
+        // Create file
+        if (File.Exists(FILE_NAME))
+        {
+            File.Delete(FILE_NAME);
+        }
+        
+        var sr = File.CreateText(FILE_NAME);
+
+        // Write file
+        JSONObject fileJson = new JSONObject();
+
+        fileJson.Add("placement", localPlayerWinningPlacement);
+        fileJson.Add("nameOfWinner", nameOfWinner);
+
+        sr.Write(fileJson.ToString());
+        sr.Close();
+
+        readyToQuit = true;
     }
 }
